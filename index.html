@@ -32,19 +32,15 @@
             </tr>
         </thead>
         <tbody id="tableBody">
-            <!-- Data rows will be inserted here -->
         </tbody>
     </table>
 
     <script>
-        // Fetch the CSV file and then process it
         fetch('./salaries.csv')
             .then(response => response.text())
             .then(csvText => {
-                // Parse the CSV data
                 const data = Papa.parse(csvText, { header: true }).data;
 
-                // Group data by year and calculate total jobs and average salary
                 const groupedByYear = data.reduce((acc, curr) => {
                     if (!acc[curr.work_year]) {
                         acc[curr.work_year] = [];
@@ -58,11 +54,10 @@
                     const totalJobs = yearData.length
                     const averageSalary = yearData.reduce((acc, curr) => {
                         const salary_in_usd = parseFloat(curr.salary_in_usd);
-                        return acc + (isNaN(salary_in_usd) ? 0 : salary_in_usd);
+                        return acc + salary_in_usd;
                     }, 0) / yearData.length;
                     return { work_year: parseInt(work_year, 10), total_jobs: totalJobs, average_salary: averageSalary.toFixed(2) };
                 });
-                // Load the table data
                 loadTableData(result);
             });
 
@@ -91,7 +86,6 @@
         }
 
         window.onload = () => {
-            // Fetching and processing are done in the fetch callback
         };
     </script>
 </body>
