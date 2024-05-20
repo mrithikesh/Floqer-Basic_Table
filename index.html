@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task_1</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            cursor: pointer;
+        }
+    </style>
+    <!-- Include PapaParse library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+    <h1>ML Engineer Salaries</h1>
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">YEAR</th>
+                <th onclick="sortTable(1)">TOTAL JOBS</th>
+                <th onclick="sortTable(2)">AVERAGE SALARY (USD)</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Data rows will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch the CSV file and then process it
+        fetch('./salaries.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                // Parse the CSV data
+                const data = Papa.parse(csvText, { header: true }).data;
+
+                // Group data by year and calculate total jobs and average salary
+                const groupedByYear = data.reduce((acc, curr) => {
+                    if (!acc[curr.work_year]) {
+                        acc[curr.work_year] = [];
+                    }
+                    acc[curr.work_year].push(curr);
+                    return acc;
+                }, {});
+
+                const result = Object.keys(groupedByYear).map(work_year => {
+                    const yearData = groupedByYear[work_year];
+                    const totalJobs = yearData.length
+                    const averageSalary = yearData.reduce((acc, curr) => {
+                        const salary_in_usd = parseFloat(curr.salary_in_usd);
+                        return acc + (isNaN(salary_in_usd) ? 0 : salary_in_usd);
+                    }, 0) / yearData.length;
+                    return { work_year: parseInt(work_year, 10), total_jobs: totalJobs, average_salary: averageSalary.toFixed(2) };
+                });
+                // Load the table data
+                loadTableData(result);
+            });
+
+        function loadTableData(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            data.forEach(row => {
+                let rowElement = document.createElement('tr');
+                rowElement.innerHTML = `<td>${row.work_year}</td><td>${row.total_jobs}</td><td>${row.average_salary}</td>`;
+                tableBody.appendChild(rowElement);
+            });
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById('mainTable');
+            const rows = Array.from(table.rows).slice(1);
+            const sortedRows = rows.sort((a, b) => {
+                const cellA = a.cells[columnIndex].innerText;
+                const cellB = b.cells[columnIndex].innerText;
+                return isNaN(cellA) ? cellA.localeCompare(cellB) : Number(cellA) - Number(cellB);
+            });
+
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            sortedRows.forEach(row => tableBody.appendChild(row));
+        }
+
+        window.onload = () => {
+            // Fetching and processing are done in the fetch callback
+        };
+    </script>
+</body>
+</html>
